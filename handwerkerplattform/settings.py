@@ -37,7 +37,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "core"
+
+    # Unsere Apps
+    "core",
+
+    # Externe Apps
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_yasg",  # <-- HINZUGEFÜGT
 ]
 
 MIDDLEWARE = [
@@ -121,3 +128,17 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Django anweisen, unser eigenes User-Modell zu verwenden
+AUTH_USER_MODEL = "core.User"
+
+# Django Rest Framework globale Einstellungen
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
