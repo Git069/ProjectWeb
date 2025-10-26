@@ -1,35 +1,86 @@
 from django.shortcuts import render
 from django.db import transaction
 from rest_framework import viewsets, permissions, generics, status
-from rest_framework.views import APIView  # <-- NEUER IMPORT
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import User, CustomerProfile, CraftsmanProfile, Job, JobApplication
-from .serializers import UserSerializer, CustomerProfileSerializer, CraftsmanProfileSerializer, RegisterSerializer, JobSerializer, JobApplicationSerializer
+from .models import User, CustomerProfile, CraftsmanProfile, Job, JobApplication, Review
+from .serializers import UserSerializer, CustomerProfileSerializer, CraftsmanProfileSerializer, RegisterSerializer, JobSerializer, JobApplicationSerializer, ReviewSerializer
 from .permissions import IsOwnerOrReadOnly, IsCustomer, IsCraftsman
 
-# ... (bisherige Views bleiben unverändert) ...
+# ... (RegisterView, UserViewSet, CustomerProfileViewSet bleiben unverändert) ...
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        # Get the created user
+        user = User.objects.get(username=request.data.get('username'))
+        # Generate or get token
+        from rest_framework.authtoken.models import Token
+        token, created = Token.objects.get_or_create(user=user)
+        # Add token to response
+        response.data['token'] = token.key
+        return response
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Logout by deleting the user's auth token.
+        Accessible at POST /api/logout/
+        """
+        try:
+            request.user.auth_token.delete()
+            return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        """
+        Returns the current authenticated user.
+        Accessible at GET /api/users/me/
+        """
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 class CustomerProfileViewSet(viewsets.ModelViewSet):
     queryset = CustomerProfile.objects.all()
     serializer_class = CustomerProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
 
 class CraftsmanProfileViewSet(viewsets.ModelViewSet):
     queryset = CraftsmanProfile.objects.all()
     serializer_class = CraftsmanProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
+    # Punkt 7.2: Neue Aktion zum Anzeigen von Bewertungen
+    # ===============================================
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def reviews(self, request, pk=None):
+        """
+        Öffentliche Aktion, um alle Bewertungen für einen Handwerker aufzulisten.
+        Erreichbar unter GET /api/craftsman-profiles/{id}/reviews/
+        """
+        profile = self.get_object()
+        # Finde alle Bewertungen, die zu Jobs gehören, die diesem Handwerker zugewiesen waren.
+        reviews = Review.objects.filter(job__assigned_craftsman=profile.user)
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+
+
 class JobViewSet(viewsets.ModelViewSet):
+    # ... (JobViewSet bleibt unverändert) ...
     serializer_class = JobSerializer
     def get_queryset(self):
         user = self.request.user
@@ -38,7 +89,8 @@ class JobViewSet(viewsets.ModelViewSet):
         return Job.objects.all()
     def get_permissions(self):
         if self.action == 'create': self.permission_classes = [permissions.IsAuthenticated, IsCustomer]
-        elif self.action in ['update', 'partial_update', 'destroy']: self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+        elif self.action in ['update', 'partial_update', 'destroy', 'complete', 'review']:
+            self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         elif self.action in ['matches', 'list_applications']: self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         elif self.action == 'apply_for_job': self.permission_classes = [permissions.IsAuthenticated, IsCraftsman]
         else: self.permission_classes = [permissions.IsAuthenticated]
@@ -68,8 +120,26 @@ class JobViewSet(viewsets.ModelViewSet):
         applications = job.applications.all()
         serializer = JobApplicationSerializer(applications, many=True)
         return Response(serializer.data)
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        job = self.get_object()
+        if job.status != Job.JobStatus.IN_PROGRESS: return Response({'error': 'Only jobs that are in progress can be completed.'}, status=status.HTTP_400_BAD_REQUEST)
+        job.status = Job.JobStatus.COMPLETED
+        job.save()
+        return Response(JobSerializer(job).data)
+    @action(detail=True, methods=['post'], url_path='review')
+    def create_review(self, request, pk=None):
+        job = self.get_object()
+        if job.status != Job.JobStatus.COMPLETED: return Response({'error': 'Only completed jobs can be reviewed.'}, status=status.HTTP_400_BAD_REQUEST)
+        if hasattr(job, 'review'): return Response({'error': 'This job has already been reviewed.'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(job=job)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class JobApplicationViewSet(viewsets.ReadOnlyModelViewSet):
+    # ... (JobApplicationViewSet bleibt unverändert) ...
     serializer_class = JobApplicationSerializer
     def get_queryset(self):
         user = self.request.user
@@ -86,46 +156,26 @@ class JobApplicationViewSet(viewsets.ReadOnlyModelViewSet):
             application.status = JobApplication.ApplicationStatus.ACCEPTED
             application.save()
             job.status = Job.JobStatus.IN_PROGRESS
+            job.assigned_craftsman = application.craftsman
             job.save()
             job.applications.exclude(pk=application.pk).update(status=JobApplication.ApplicationStatus.REJECTED)
         return Response({'status': 'Application accepted and job is now in progress.'})
 
-# Punkt 4: Die Dashboard-View
-# ============================
 class DashboardView(APIView):
-    """
-    Ein dedizierter Endpunkt, der aggregierte Daten für das Benutzer-Dashboard liefert.
-    """
+    # ... (DashboardView bleibt unverändert) ...
     permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        data = {
-            'user_info': UserSerializer(user).data
-        }
-
+        data = {'user_info': UserSerializer(user).data}
         if user.role == User.Role.CUSTOMER:
             my_jobs = Job.objects.filter(customer=user)
-            data['customer_dashboard'] = {
-                'total_jobs': my_jobs.count(),
-                'open_jobs': my_jobs.filter(status=Job.JobStatus.OPEN).count(),
-                'in_progress_jobs': my_jobs.filter(status=Job.JobStatus.IN_PROGRESS).count(),
-                'new_applications': JobApplication.objects.filter(job__in=my_jobs, status=JobApplication.ApplicationStatus.SUBMITTED).count()
-            }
-
+            data['customer_dashboard'] = {'total_jobs': my_jobs.count(), 'open_jobs': my_jobs.filter(status=Job.JobStatus.OPEN).count(), 'in_progress_jobs': my_jobs.filter(status=Job.JobStatus.IN_PROGRESS).count(), 'new_applications': JobApplication.objects.filter(job__in=my_jobs, status=JobApplication.ApplicationStatus.SUBMITTED).count()}
         elif user.role == User.Role.CRAFTSMAN:
             my_applications = JobApplication.objects.filter(craftsman=user)
-            # Für einen Handwerker sind neue, offene Jobs in seinem Gewerk interessant
             try:
                 trade = user.craftsman_profile.trade
                 open_market_jobs = Job.objects.filter(status=Job.JobStatus.OPEN, trade__iexact=trade).count()
             except CraftsmanProfile.DoesNotExist:
                 open_market_jobs = 0
-
-            data['craftsman_dashboard'] = {
-                'total_applications': my_applications.count(),
-                'accepted_applications': my_applications.filter(status=JobApplication.ApplicationStatus.ACCEPTED).count(),
-                'open_market_jobs': open_market_jobs
-            }
-        
+            data['craftsman_dashboard'] = {'total_applications': my_applications.count(), 'accepted_applications': my_applications.filter(status=JobApplication.ApplicationStatus.ACCEPTED).count(), 'open_market_jobs': open_market_jobs}
         return Response(data)

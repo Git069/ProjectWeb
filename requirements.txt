@@ -1,4 +1,13 @@
-asgiref==3.10.0
-Django==5.2.7
-djangorestframework==3.16.1
-sqlparse==0.5.3
+Django
+djangorestframework
+drf-yasg
+# drf-nested-routers # Entfernt
+gunicorn
+dj-database-url
+whitenoise
+# Neu für CORS:
+django-cors-headers
+# WebSocket Support:
+channels
+channels-redis
+daphne
