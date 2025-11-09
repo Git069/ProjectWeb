@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, CustomerProfile, CraftsmanProfile, Job
+from .models import User, CustomerProfile, CraftsmanProfile, Offer
 
 # Wir registrieren unsere Modelle hier, damit sie im Django Admin-Interface erscheinen.
 
@@ -7,4 +7,4 @@ from .models import User, CustomerProfile, CraftsmanProfile, Job
 admin.site.register(User)
 admin.site.register(CustomerProfile)
 admin.site.register(CraftsmanProfile)
-admin.site.register(Job)
+admin.site.register(Offer)

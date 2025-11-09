@@ -11,7 +11,10 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Bei Profilen ist der Eigentümer `obj.user`
         if hasattr(obj, 'user'):
             return obj.user == request.user
-        # Bei Jobs ist der Eigentümer `obj.customer`
+        # Bei Angeboten ist der Eigentümer `obj.craftsman`
+        if hasattr(obj, 'craftsman'):
+            return obj.craftsman == request.user
+        # Fallback: Bei älteren Modellen mit `customer`
         if hasattr(obj, 'customer'):
             return obj.customer == request.user
         return False
