@@ -23,5 +23,10 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     # Haupt-API-Pfade
-    path("api/", include("core.urls")), 
+    path("api/", include(([
+        path('', include('users.urls')),
+        path('', include('jobs.urls')),
+        path('', include('chat.urls')),
+        path('', include('notifications.urls')),
+    ], 'api'), namespace='api')),
 ]
