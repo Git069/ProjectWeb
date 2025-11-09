@@ -213,7 +213,7 @@ function Chat() {
         </Paper>
       ) : (
         <Grid container spacing={2} sx={{ height: '70vh' }}>
-          {/* Chat List */}
+          {/* chat List */}
           <Grid item xs={12} md={4}>
             <Paper sx={{ ...cardStyle, height: '100%', overflow: 'auto' }}>
               <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
@@ -267,12 +267,12 @@ function Chat() {
             </Paper>
           </Grid>
 
-          {/* Chat Window */}
+          {/* chat Window */}
           <Grid item xs={12} md={8}>
             <Paper sx={{ ...cardStyle, height: '100%', display: 'flex', flexDirection: 'column' }}>
               {selectedRoom ? (
                 <>
-                  {/* Chat Header */}
+                  {/* chat Header */}
                   <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
                     <Typography variant="h6" fontWeight={600}>
                       {user.id === selectedRoom.customer

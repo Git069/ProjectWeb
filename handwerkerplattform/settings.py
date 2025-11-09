@@ -25,6 +25,10 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_yasg",
     "corsheaders",
+    "jobs.apps.JobsConfig",
+    "notifications.apps.NotificationsConfig",
+    "chat.apps.ChatConfig",
+    "users.apps.UsersConfig",
     # "channels", # Entfernt
 ]
 

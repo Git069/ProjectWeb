@@ -337,9 +337,9 @@ function CraftsmanDashboard() {
         </CardContent>
       </Card>
 
-      {/* Available Jobs and My Applications */}
+      {/* Available jobs and My Applications */}
       <Grid container spacing={3}>
-        {/* Available Jobs */}
+        {/* Available jobs */}
         <Grid item xs={12} md={6}>
           <Card sx={{
             background: 'rgba(255,255,255,0.95)',

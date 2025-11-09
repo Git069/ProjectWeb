@@ -285,9 +285,9 @@ function CustomerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent Jobs and Applications */}
+      {/* Recent jobs and Applications */}
       <Grid container spacing={3}>
-        {/* Recent Jobs */}
+        {/* Recent jobs */}
         <Grid item xs={12} md={6}>
           <Card sx={{
             background: 'rgba(255,255,255,0.95)',

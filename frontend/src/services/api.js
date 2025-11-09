@@ -50,7 +50,7 @@ export const dashboardAPI = {
     api.get('/dashboard/'),
 };
 
-// Jobs endpoints
+// jobs endpoints
 export const jobsAPI = {
   getJobs: () =>
     api.get('/jobs/'),
@@ -89,7 +89,7 @@ export const applicationsAPI = {
     api.post(`/applications/${id}/reject/`),
 };
 
-// Chat endpoints
+// chat endpoints
 export const chatAPI = {
   getChatRooms: () =>
     api.get('/chat-rooms/'),
