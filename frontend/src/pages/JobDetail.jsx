@@ -335,7 +335,7 @@ function JobDetail() {
           </Box>
         )}
 
-        {/* Customer: Complete Job Button */}
+        {/* Customer: Complete Offer Button */}
         {isCustomer() && job.customer === user.id && job.status === 'IN_PROGRESS' && (
           <Box sx={{ mt: 3 }}>
             <Button
@@ -433,7 +433,7 @@ function JobDetail() {
         </Paper>
       )}
 
-      {/* Craftsman: Apply for Job */}
+      {/* Craftsman: Apply for Offer */}
       {isCraftsman() && job.status === 'OPEN' && !hasApplied && (
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h6" gutterBottom>

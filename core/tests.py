@@ -1,11 +1,11 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .models import User, Job, CraftsmanProfile
+from .models import User, Offer, CraftsmanProfile
 
 class MatchingAlgorithmTest(APITestCase):
     """
-    Test-Suite für den Matching-Algorithmus in der `matches`-Aktion des JobViewSet.
+    Test-Suite für den Matching-Algorithmus in der `matches`-Aktion des OfferViewSet.
     """
 
     def setUp(self):
@@ -14,7 +14,7 @@ class MatchingAlgorithmTest(APITestCase):
         Sie erstellt eine saubere Test-Datenbank mit allen notwendigen Objekten.
         """
         self.customer = User.objects.create_user(username='testcustomer', password='testpass123', role=User.Role.CUSTOMER)
-        self.job = Job.objects.create(
+        self.job = Offer.objects.create(
             customer=self.customer, 
             title='Heizung reparieren', 
             trade='Sanitär', 

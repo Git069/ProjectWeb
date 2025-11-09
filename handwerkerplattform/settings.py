@@ -76,6 +76,11 @@ DATABASES = {
     )
 }
 
+# Ensure MySQL strict mode when using MySQL engine
+if DATABASES['default'].get('ENGINE') == 'django.db.backends.mysql':
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS'].setdefault('init_command', "SET sql_mode='STRICT_TRANS_TABLES'")
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},

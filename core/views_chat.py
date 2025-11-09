@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .models_chat import ChatRoom, Message
-from .models import Job
+from .models import Offer
 from .serializers_chat import ChatRoomSerializer, MessageSerializer
 
 
@@ -38,9 +38,9 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            job = Job.objects.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+            job = Offer.objects.get(id=job_id)
+        except Offer.DoesNotExist:
+            return Response({'error': 'Offer not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Only job customer can initiate chat
         if job.customer != request.user:

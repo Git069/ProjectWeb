@@ -5,9 +5,9 @@ from django.conf import settings
 
 class ChatRoom(models.Model):
     """
-    Chat room between a customer and craftsman for a specific job
+    Chat room between a customer and craftsman for a specific offer
     """
-    job = models.ForeignKey('Job', on_delete=models.CASCADE, related_name='chat_rooms')
+    job = models.ForeignKey('core.Offer', on_delete=models.CASCADE, related_name='chat_rooms')
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -26,7 +26,7 @@ class ChatRoom(models.Model):
         ordering = ['-updated_at']
 
     def __str__(self):
-        return f"Chat: {self.customer.username} <-> {self.craftsman.username} (Job #{self.job.id})"
+        return f"Chat: {self.customer.email} <-> {self.craftsman.email} (Offer #{self.job.id})"
 
 
 class Message(models.Model):
@@ -47,4 +47,4 @@ class Message(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.sender.username}: {self.content[:50]}"
+        return f"{self.sender.email}: {self.content[:50]}"
