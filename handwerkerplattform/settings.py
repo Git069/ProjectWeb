@@ -11,8 +11,9 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# Bereinigte INSTALLED_APPS
 INSTALLED_APPS = [
-    "daphne",
+    # "daphne", # Entfernt
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -23,16 +24,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "drf_yasg",
-    # CORS-Header App hinzufügen
     "corsheaders",
-    # WebSocket Support
-    "channels",
+    # "channels", # Entfernt
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    # CORS-Middleware (so weit oben wie möglich, aber nach SecurityMiddleware)
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -42,22 +40,13 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# CORS-Einstellungen
-# ==================
 CORS_ALLOWED_ORIGINS = [
-    # Hier die Adresse unseres React-Entwicklungsservers eintragen
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
-# Optional: Wenn du in der Produktion eine andere Domain hast, füge sie hier hinzu
-# CORS_ALLOWED_ORIGIN_REGEXES = [
-#     r"^https://\w+\.meine-domain\.com$",
-# ]
-
 ROOT_URLCONF = "handwerkerplattform.urls"
 
-# ... (Rest der Datei bleibt gleich) ...
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -73,18 +62,12 @@ TEMPLATES = [
     },
 ]
 
+# Zurück zur reinen WSGI-Anwendung
 WSGI_APPLICATION = "handwerkerplattform.wsgi.application"
-ASGI_APPLICATION = "handwerkerplattform.asgi.application"
+# ASGI_APPLICATION = "handwerkerplattform.asgi.application" # Entfernt
 
-# Channels Configuration
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')],
-        },
-    },
-}
+# Channels-Konfiguration entfernt
+# CHANNEL_LAYERS = { ... }
 
 DATABASES = {
     'default': dj_database_url.config(
