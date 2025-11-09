@@ -8,6 +8,31 @@ from .models import User, CustomerProfile, CraftsmanProfile, Job, JobApplication
 from .serializers import UserSerializer, CustomerProfileSerializer, CraftsmanProfileSerializer, RegisterSerializer, JobSerializer, JobApplicationSerializer, ReviewSerializer
 from .permissions import IsOwnerOrReadOnly, IsCustomer, IsCraftsman
 
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import JsonResponse, HttpRequest
+
+# Die Haupt-View, die die Basis-Seite lädt
+def main_view(request: HttpRequest):
+    # Lade das Grundgerüst mit Header, Navigationsleiste etc.
+    return render(request, 'main_base.html', {})
+
+# Die View, die nur den Inhalt für die "Homepage" liefert
+def homepage_content_view(request: HttpRequest):
+    # Prüfen, ob es ein AJAX-Request ist
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # AJAX-Anfrage: Rendere nur das kleine Inhalts-Snippet
+        context = {'data_for_homepage': 'Hier sind die neuen Inhalte'}
+        
+        # render_to_string rendert das Template als String, nicht als HttpResponse
+        html_snippet = render_to_string('snippets/homepage_content.html', context, request=request)
+        
+        # Sende den HTML-Inhalt als JSON-Antwort zurück
+        return JsonResponse({'html': html_snippet, 'title': 'Homepage'})
+    
+    # Optional: Wenn die View doch direkt aufgerufen wird, leite zur Hauptseite weiter oder behandle es als vollen Request
+    return render(request, 'homepage.html', {}) # Oder redirect('main_view')
+
 # ... (RegisterView, UserViewSet, CustomerProfileViewSet bleiben unverändert) ...
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
